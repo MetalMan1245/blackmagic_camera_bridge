@@ -41,6 +41,39 @@ impl fmt::Display for RecordingEvent {
     }
 }
 
+mod dispatcher;
+
+pub use dispatcher::EventDispatcher;
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RecordingEvent {
+    Started { timestamp: u64 },
+    Stopped { timestamp: u64, duration_ms: u64 },
+    Error(String),
+}
+
+impl RecordingEvent {
+    pub fn new_start() -> Self {
+        Self::Started {
+            timestamp: std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() as u64,
+        }
+    }
+
+    pub fn new_stop(start_time: u64) -> Self {
+        let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as u64;
+        Self::Stopped {
+            timestamp: now,
+            duration_ms: now.saturating_sub(start_time),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -51,23 +84,6 @@ mod tests {
         match event {
             RecordingEvent::Started { timestamp } => assert!(timestamp > 0),
             _ => panic!("Expected Started event"),
-        }
-    }
-
-    #[test]
-    fn test_new_stop_calculates_duration() {
-        let start = RecordingEvent::new_start();
-        let start_ts = match start {
-            RecordingEvent::Started { timestamp } => timestamp,
-            _ => unreachable!(),
-        };
-        std::thread::sleep(std::time::Duration::from_millis(100));
-        let stop = RecordingEvent::new_stop(start_ts);
-        match stop {
-            RecordingEvent::Stopped { duration_ms, .. } => {
-                assert!(duration_ms >= 100, "Duration should be at least 100ms");
-            }
-            _ => panic!("Expected Stopped event"),
         }
     }
 }

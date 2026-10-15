@@ -1,6 +1,6 @@
 use log::info;
 use thiserror::Error;
-use crate::events::RecordingEvent;
+// use crate::events::RecordingEvent;
 
 #[derive(Error, Debug)]
 pub enum OscError {

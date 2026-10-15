@@ -1,3 +1,7 @@
+mod mock;
+
+pub use mock::MockCameraController;
+
 use async_trait::async_trait;
 use thiserror::Error;
 use crate::events::RecordingEvent;
