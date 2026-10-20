@@ -1,33 +1,52 @@
 use clap::Parser;
 use env_logger::Env;
-use log::info;
+use log::{error, info};
+use std::path::PathBuf;
 
 use tokio::sync::mpsc;
 
 use blackmagic_camera_bridge::{
     ble::{CameraController, MockCameraController},
+    config::Config,
     events::{EventDispatcher, RecordingEvent},
     osc::OscSender,
 };
 
 #[derive(Parser, Debug)]
-#[command(name = "camlink", version, about = "Bridge BMPCC4K record signals to REAPER via OSC")]
+#[command(
+    name = "camlink",
+    version,
+    about = "Bridge BMPCC4K record signals to REAPER via OSC"
+)]
 struct Args {
     /// Camera Bluetooth MAC address
     #[arg(short, long)]
     camera: Option<String>,
 
     /// OSC target host
-    #[arg(long, default_value = "127.0.0.1")]
-    osc_host: String,
+    #[arg(long)]
+    osc_host: Option<String>,
 
     /// OSC target port
-    #[arg(long, default_value_t = 6666)]
-    osc_port: u16,
+    #[arg(long)]
+    osc_port: Option<u16>,
 
     /// Use mock camera instead of real hardware
-    #[arg(long, default_value_t = false)]
+    #[arg(long)]
     mock: bool,
+
+    /// Config file path
+    #[arg(long, default_value = "~/.config/camlink/config.json")]
+    config: String,
+}
+
+fn expand_tilde(path: &str) -> PathBuf {
+    if let Some(stripped) = path.strip_prefix("~/") {
+        if let Some(home) = dirs::home_dir() {
+            return home.join(stripped);
+        }
+    }
+    PathBuf::from(path)
 }
 
 #[tokio::main]
@@ -36,26 +55,65 @@ async fn main() {
 
     let args = Args::parse();
     info!("Starting camlink...");
-    info!("OSC target: {}:{}", args.osc_host, args.osc_port);
+
+    // Load config from file
+    let config_path = expand_tilde(&args.config);
+    let config = match Config::load(&config_path) {
+        Ok(c) => {
+            info!("Loaded config from {}", config_path.display());
+            c
+        }
+        Err(e) => {
+            log::warn!(
+                "Could not load config from {}: {}",
+                config_path.display(),
+                e
+            );
+            Config::default()
+        }
+    };
+
+    // CLI arguments override config
+    let camera_address = args.camera.or_else(|| {
+        if !config.camera.mac_address.is_empty() {
+            Some(config.camera.mac_address.clone())
+        } else {
+            None
+        }
+    });
+
+    let osc_host = args.osc_host.unwrap_or(config.osc.target_host);
+    let osc_port = args.osc_port.unwrap_or(config.osc.target_port);
+
+    info!("OSC target: {}:{} ", osc_host, osc_port);
+    info!("Camera address: {:?}", camera_address);
 
     let mut controller: Box<dyn CameraController> = if args.mock {
         info!("Using mock camera controller");
         Box::new(MockCameraController::new())
     } else {
-        // TODO: Create real btleplug controller
-        todo!("Real camera controller implementation");
+        let Some(mac) = camera_address.as_deref() else {
+            error!("Camera MAC address required for non-mock mode; provide via --camera or config file");
+            std::process::exit(1);
+        };
+        error!("Real camera controller not yet implemented (coral_impl.rs pending)");
+        error!(
+            "Use --mock until coral_impl lands; camera address was provided as {}",
+            mac
+        );
+        std::process::exit(1);
     };
 
-    let osc = OscSender::connect(&args.osc_host, args.osc_port)
-    .await
-    .expect("Failed to create OSC sender socket");
+    let osc = OscSender::connect(&osc_host, osc_port)
+        .await
+        .expect("Failed to create OSC sender socket");
     let dispatcher = EventDispatcher::new(osc);
 
     let (tx, rx) = mpsc::channel::<RecordingEvent>(100);
     controller
-    .subscribe_to_record_notifications(tx)
-    .await
-    .expect("Failed to subscribe to camera events");
+        .subscribe_to_record_notifications(tx)
+        .await
+        .expect("Failed to subscribe to camera events");
 
     tokio::spawn(async move {
         dispatcher.run(rx).await;
@@ -63,7 +121,16 @@ async fn main() {
 
     info!("camlink ready. Press Ctrl+C to exit.");
 
-    // Keep running indefinitely
-    tokio::signal::ctrl_c().await.expect("Failed to listen for Ctrl+C");
-    info!("Shutting down...");
+    // Keep running indefinitely, handle graceful shutdown
+    tokio::signal::ctrl_c()
+        .await
+        .expect("Failed to listen for Ctrl+C");
+    info!("Shutdown signal received...");
+
+    controller
+        .disconnect()
+        .await
+        .expect("Failed to disconnect from camera");
+    info!("Disconnected from camera");
+    info!("Shutdown complete");
 }

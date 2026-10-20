@@ -25,12 +25,12 @@ impl OscSender {
     pub async fn connect(host: &str, port: u16) -> OscResult<Self> {
         let target = format!("{}:{}", host, port);
         let socket = UdpSocket::bind("0.0.0.0:0")
-        .await
-        .map_err(|e| OscError::SendFailed(format!("failed to bind UDP socket: {}", e)))?;
+            .await
+            .map_err(|e| OscError::SendFailed(format!("failed to bind UDP socket: {}", e)))?;
         socket
-        .connect(&target)
-        .await
-        .map_err(|e| OscError::SendFailed(format!("failed to connect to {}: {}", target, e)))?;
+            .connect(&target)
+            .await
+            .map_err(|e| OscError::SendFailed(format!("failed to connect to {}: {}", target, e)))?;
         info!("OSC: Socket connected to {}", target);
         Ok(Self { socket, target })
     }
@@ -38,18 +38,14 @@ impl OscSender {
     async fn send(&self, addr: &str, args: Vec<OscType>) -> OscResult<()> {
         let packet = OscPacket::Message(OscMessage {
             addr: addr.to_string(),
-                                        args,
+            args,
         });
-        let bytes = encoder::encode(&packet)
-        .map_err(|e| OscError::EncodeFailed(e.to_string()))?;
-        self.socket
-        .send(&bytes)
-        .await
-        .map_err(|e| match e.kind() {
+        let bytes = encoder::encode(&packet).map_err(|e| OscError::EncodeFailed(e.to_string()))?;
+        self.socket.send(&bytes).await.map_err(|e| match e.kind() {
             std::io::ErrorKind::ConnectionRefused => OscError::SendFailed(format!(
                 "nothing is listening on {} - is REAPER's OSC control surface configured? \
 (note: this error may refer to an earlier send)",
-                                                                                  self.target
+                self.target
             )),
             _ => OscError::SendFailed(e.to_string()),
         })?;
