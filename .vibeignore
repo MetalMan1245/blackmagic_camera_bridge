@@ -1,0 +1,77 @@
+# vibe-coder context filter — read ONLY by vibe-coder.
+# Files matching these patterns are hidden from the AI's
+# file listings and file reads to save context. This does
+# NOT affect git. Syntax = standard gitignore patterns.
+
+# >>> vibe-coder core defaults (safe to edit) >>>
+# Version control internals
+.git/
+
+# Python caches & tooling
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+site-packages/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Node / web builds
+node_modules/
+.next/
+.nuxt/
+coverage/
+*.tsbuildinfo
+
+# Rust / Cargo
+/target/
+**/target/
+
+# Other common build output
+bin/Debug/
+bin/Release/
+obj/
+out/
+cmake-build-*/
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dylib
+*.exe
+*.dll
+*.class
+*.jar
+*.war
+*.pyd
+*.pdb
+*.ilk
+
+# Logs & temp files
+*.log
+logs/
+tmp/
+temp/
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+
+# vibe-coder internal state
+.vibe-coder/
+# <<< vibe-coder core defaults <<<
+
+# Rust (added by vibe-coder)
+/target/
+**/target/
+*.rs.bk
+*.rlib
+Cargo.lock.bak

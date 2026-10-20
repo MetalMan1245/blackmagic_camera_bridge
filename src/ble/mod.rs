@@ -1,6 +1,8 @@
+pub mod coral_impl;
 mod mock;
 mod packet;
 
+pub use coral_impl::CoralCameraController;
 pub use mock::MockCameraController;
 pub use packet::{parse_packet, CameraPacket};
 
