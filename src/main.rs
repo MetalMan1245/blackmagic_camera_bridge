@@ -2,9 +2,11 @@ use clap::Parser;
 use env_logger::Env;
 use log::info;
 
+use tokio::sync::mpsc;
+
 use blackmagic_camera_bridge::{
-    ble::{MockCameraController, CameraController},
-    events::EventDispatcher,
+    ble::{CameraController, MockCameraController},
+    events::{EventDispatcher, RecordingEvent},
     osc::OscSender,
 };
 
@@ -36,7 +38,7 @@ async fn main() {
     info!("Starting camlink...");
     info!("OSC target: {}:{}", args.osc_host, args.osc_port);
 
-    let controller: Box<dyn CameraController> = if args.mock {
+    let mut controller: Box<dyn CameraController> = if args.mock {
         info!("Using mock camera controller");
         Box::new(MockCameraController::new())
     } else {
@@ -44,11 +46,20 @@ async fn main() {
         todo!("Real camera controller implementation");
     };
 
-    let osc = OscSender::new(args.osc_host, args.osc_port);
+    let osc = OscSender::connect(&args.osc_host, args.osc_port)
+    .await
+    .expect("Failed to create OSC sender socket");
     let dispatcher = EventDispatcher::new(osc);
 
-    // TODO: Wire controller.subscribe() to dispatcher
-    // For mock testing, you'd call subscribe_to_record_notifications
+    let (tx, rx) = mpsc::channel::<RecordingEvent>(100);
+    controller
+    .subscribe_to_record_notifications(tx)
+    .await
+    .expect("Failed to subscribe to camera events");
+
+    tokio::spawn(async move {
+        dispatcher.run(rx).await;
+    });
 
     info!("camlink ready. Press Ctrl+C to exit.");
 

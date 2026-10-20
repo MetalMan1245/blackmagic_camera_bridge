@@ -44,12 +44,15 @@ impl CameraController for MockCameraController {
         tokio::spawn(async move {
             // Simulate recording start after 1 second
             sleep(Duration::from_secs(1)).await;
+            let start_ts = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
             let _ = tx_clone.send(RecordingEvent::new_start()).await;
 
             // Simulate recording stop after 5 seconds
             sleep(Duration::from_secs(4)).await;
-            // Get start time from the first event (this is simplified)
-            let _ = tx_clone.send(RecordingEvent::new_stop(0)).await;
+            let _ = tx_clone.send(RecordingEvent::new_stop(start_ts)).await;
         });
 
         Ok(())
