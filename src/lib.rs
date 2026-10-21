@@ -1,3 +1,6 @@
+#[cfg(feature = "python")]
+mod python_api;
+
 pub mod ble;
 pub mod config;
 pub mod events;

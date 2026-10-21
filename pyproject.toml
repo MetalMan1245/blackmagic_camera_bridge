@@ -1,0 +1,23 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "blackmagic-camera-bridge"
+version = "0.1.0"
+description = "Bridge BMPCC4K Bluetooth record signals to REAPER via OSC"
+requires-python = ">=3.8"
+dependencies = [
+    "PyQt6>=6.6",
+]
+
+[tool.maturin]
+features = ["python", "extension-module"]
+module-name = "blackmagic_camera_bridge"
+include = [{ path = "Cargo.lock", format = "wheel" }]
+
+[tool.maturin.target.aarch64-apple-darwin]
+skip = true
+
+[tool.maturin.target.x86_64-apple-darwin]
+skip = true
