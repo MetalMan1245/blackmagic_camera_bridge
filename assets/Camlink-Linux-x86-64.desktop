@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=Resolve Convert Installer
+Comment=Install, update, or uninstall Resolve Convert
+Icon=system-software-install
+Terminal=true
+Exec=bash -c 'mkdir -p "$HOME/.local/bin"; curl -fsSL https://raw.githubusercontent.com/MetalMan1245/blackmagic-camera-bridge/main/camlink_remote-install.sh -o "$HOME/.local/bin/camlink_remote-install.sh" && chmod +x "$HOME/.local/bin/camlink_remote-install.sh" && "$HOME/.local/bin/camlink_remote-install.sh"; echo; read -p "Press Enter to close..."'
+Categories=Utility;

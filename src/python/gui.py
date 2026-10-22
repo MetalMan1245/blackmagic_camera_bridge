@@ -12,6 +12,7 @@ import sys
 from pathlib import Path
 
 from PyQt6.QtCore import QTimer, Qt
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (
     QApplication,
     QVBoxLayout,
@@ -46,6 +47,11 @@ class CamlinkWindow(QMainWindow):
 
     def _init_ui(self):
         """Build the widget tree. No QML, pure PyQt6."""
+        # Set window role for consistent taskbar/menu identification
+        self.setWindowRole("camlink-gui")
+
+        self.setWindowIcon(QIcon.fromTheme("camera-video"))
+
         self.setWindowTitle("Camlink — Blackmagic Camera Bridge")
         self.setMinimumSize(600, 500)
 

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Auto-generated wrapper for Camlink GUI
+# Regenerate by re-running install.sh
+
+set -euo pipefail
+
+PROJECT_ROOT="$HOME/.local/share/camlink"
+VENV_DIR="$HOME/.local/share/camlink/.venv"
+
+[[ -f "$VENV_DIR/bin/activate" ]] || {
+    echo "ERROR: Virtual environment not found at $VENV_DIR"
+    echo "Re-run the install script to recreate installation."
+    exit 1
+}
+
+source "$VENV_DIR/bin/activate"
+
+if ! python -c 'import blackmagic_camera_bridge' 2>/dev/null; then
+    echo "ERROR: Rust extension not importable."
+    echo "Re-run the install script to rebuild."
+    exit 1
+fi
+
+exec python "$PROJECT_ROOT/gui.py" "$@"

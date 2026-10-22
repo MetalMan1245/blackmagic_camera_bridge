@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Blackmagic Camera Bridge - camlink
+Comment=camlink - Bridge Blackmagic Camera recording to REAPER via OSC
+Exec=camlink-gui
+Icon=camera-video
+Terminal=false
+Type=Application
+Categories=AudioVideo;Audio;Video;
+Keywords=BMPCC;Blackmagic;REAPER;OSC;Bluetooth;Recording;
+StartupNotify=true
