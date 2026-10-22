@@ -16,7 +16,6 @@ curl -fsSL \
 echo "[Remote Installer] Extracting..."
 unzip -q repo.zip
 cd blackmagic_camera_bridge-main/assets
-cd assets
 
 echo "[Remote Installer] Running installer..."
 chmod +x install_uninstall-camlink.sh
