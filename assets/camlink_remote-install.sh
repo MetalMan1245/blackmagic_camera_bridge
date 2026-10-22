@@ -11,11 +11,11 @@ cd "$TMPDIR"
 echo "[Remote Installer] Downloading repo..."
 curl -fsSL \
   -o repo.zip \
-  https://github.com/MetalMan1245/blackmagic-camera-bridge/archive/refs/heads/main.zip
+  https://github.com/MetalMan1245/blackmagic_camera_bridge/archive/refs/heads/main.zip
 
 echo "[Remote Installer] Extracting..."
 unzip -q repo.zip
-cd blackmagic-camera-bridge-main
+cd blackmagic_camera_bridge-main
 
 echo "[Remote Installer] Running installer..."
 chmod +x install_uninstall-camlink.sh
